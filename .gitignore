@@ -1,3 +1,5 @@
 .DS_Store
 data/eedi-raw/data.zip
 /data/eedi-raw/data/images
+data/eedi-raw/data/train_data/train_task_1_2.csv
+data/eedi-raw/data/metadata/answer_metadata_task_1_2.csv
