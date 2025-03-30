@@ -1,18 +1,19 @@
-import os
+import os, pprint, joblib
 import pandas as pd
 import numpy as np
-import pprint
-import joblib
-from sklearn.model_selection import StratifiedKFold
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
+from sklearn.dummy import DummyClassifier
+import umap
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.feature_selection import SelectFromModel
 from param import param_grid
 
-def load(data_path: str, output_dir: str = './output/', pca: bool = False):
+def load(data_path: str, output_dir: str = './output/', pca: bool = False, um: bool = False, n_components: int = 100):
     # Most of the data is already preprocessed by preprocess.py in eedi-raw
     # Hence this is mostly to further reduce the data size
     if os.path.exists(f'{output_dir}/data.pkl'):
@@ -31,17 +32,29 @@ def load(data_path: str, output_dir: str = './output/', pca: bool = False):
     # If PCA is used, then transform the data
     if pca:
         from sklearn.decomposition import PCA
-        pca = PCA(n_components=10) # whiten=False by default
+        print("PCA is used. Transforming the data...")
+        pca = PCA(n_components=n_components, whiten=True) # whiten=False by default
         X = pca.fit_transform(X)
+    if um:
+        reducer = umap.UMAP(n_components=n_components)
+        print("UMAP is used. Transforming the data...")
+        X = reducer.fit_transform(X)
     return X, y
 
 # Perform GridSearch CV on a particular model
-def main(algorithm: str):
+def main(algorithm: str, pca: bool, um: bool, fs: bool, n_components: int):
     param = param_grid[algorithm] # Hyperparameters
     
     # Load the data
-    X, y = load(data_path, output_path, pca=False)
+    X, y = load(data_path, output_path, pca=pca, um=um, n_components=n_components)
     print("Shape of data:", X.shape)
+
+    if fs:
+        scaler = MinMaxScaler()
+        print("Feature selection is used. Transforming the data...")
+        X = scaler.fit_transform(X)
+        # Feature selection
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=0)
 
     # Initialize the model
@@ -54,8 +67,20 @@ def main(algorithm: str):
             model = LogisticRegression(random_state=0)
         case 'NN':
             model = MLPClassifier(random_state=0)
+        case 'BASE':
+            model = DummyClassifier(random_state=0)
         case _:
             raise ValueError(f"Unknown algorithm: {algorithm}")
+        
+    # Additional code when feature selection is used
+    if fs and algorithm != 'BASE':
+        # Feature selection using Random Forest
+        print("Shape of training data before feature selection:", X_train.shape)
+        selector = SelectFromModel(model, threshold='median')
+        selector.fit(X_train, y_train)
+        X_train = selector.transform(X_train)
+        X_test = selector.transform(X_test)
+        print("Shape of training data after feature selection:", X_train.shape)
 
     # Find the best hyperparameter with GridSearchCV
     # By default for classification, stratified CV is used
@@ -70,11 +95,17 @@ def main(algorithm: str):
 
 
 if __name__ == '__main__':
-    output_path = './output/eedi' # output_path = './output/eedi' './output/toy
+    pca = False # PCA is used
+    um = True # Feature hashing is used
+    fs = True # Feature selection is used
+    n_components = 150 # Number of components to keep
+
+    output_path = f'./output/eedi{'-pca-' if pca else ''}{'-um-' if um else ''}{f'{n_components}' if pca or um else ''}{'-fs' if fs else ''}' # output_path = './output/eedi' './output/toy
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     data_path = './data/eedi/processed_eedi.csv' # data_path = './data/eedi/processed_eedi.csv' './data/eedi-toy/toy.csv'
 
     # Algorithms
-    algorithm = 'LR' # 'RFT', 'GBDT', 'LR', 'NN'
-    main(algorithm)
+    algorithm = ['RFS'] # 'RFS', 'GBDT', 'LR', 'NN', 'BASE' <- Stratified baseline model
+    for a in algorithm:
+        main(a, pca, um, fs, n_components)
