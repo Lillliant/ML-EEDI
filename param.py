@@ -5,20 +5,25 @@ param_grid = {
         'max_depth': [None, 5, 10, 20],
     },
     'GBDT' : {
-        'n_estimators': [100, 300, 500],
+        'n_estimators': [100, 300, 500, 1000],
         'learning_rate': [0.001, 0.01, 0.1, 1],
         'objective': ['binary:logistic'],
-        'max_depth': [3, 5, 7],
+        'max_depth': [1, 3, 5, 7, 10],
     },
     'LR' : {
         'C': [0.001, 0.01, 0.1, 1, 10, 100],
-        'penalty': ['l1', 'l2', 'elasticnet'],
+        'penalty': ['l1', 'l2'],
+        'solver': ['sag', 'saga', 'liblinear'],
         'max_iter': [10000],
     },
     'NN' : {
-        'hidden_layer_sizes': [(100,), (300,) (500,)],
+        'hidden_layer_sizes': [(100,), (300,), (500,), (50,50), (100, 100), (300, 300), (500,500)],
         'activation': ['relu', 'tanh'],
-        'solver': ['adam', 'l-bfgs'],
-        'alpha': [0.01, 0.1, 1, 10],
+        'solver': ['adam', 'lbfgs'],
+        'alpha': [0.01, 0.1, 1, 10, 100],
+        'max_iter': [10000],
+    },
+    'BASE' : {
+        'strategy': ['stratified'],
     }
 }
