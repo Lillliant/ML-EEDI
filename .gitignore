@@ -9,3 +9,4 @@ data/eedi/train_v3.pkl
 data/eedi/processed_eedi.csv
 *.log
 /__pycache__
+main.bash
