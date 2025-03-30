@@ -11,9 +11,8 @@ param_grid = {
         'max_depth': [3, 5, 7],
     },
     'LR' : {
-        'C': [0.0001, 0.001, 0.01, 0.1, 1, 10, 100],
+        'C': [0.001, 0.01, 0.1, 1, 10, 100],
         'penalty': ['l1', 'l2', 'elasticnet'],
-        'solver': ['sag', 'saga', 'liblinear'],
         'max_iter': [10000],
     },
     'NN' : {
