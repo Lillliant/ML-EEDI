@@ -1,18 +1,16 @@
 import os
-import sys
 import pandas as pd
 import numpy as np
 import pprint
 import joblib
-from sklearn.model_selection import cross_validate
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
-from param import param_grid
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
+from param import param_grid
 
 def load(data_path: str, output_dir: str = './output/', pca: bool = False):
     # Most of the data is already preprocessed by preprocess.py in eedi-raw
