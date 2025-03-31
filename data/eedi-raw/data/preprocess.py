@@ -2,14 +2,6 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-"""
-There are 19,893,317 rows in the training+testing data
-15,867,850
-I want to filter the data such that only  rows are left
-How many features will be there?
-The distribution of the data should be maintained
-"""
-
 def analysis(data: pd.DataFrame):
     # Check if a student has answered the same question more than once
     df = data[['UserId', 'QuestionId']]
