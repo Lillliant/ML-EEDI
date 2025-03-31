@@ -17,10 +17,10 @@ param_grid = {
         'max_iter': [10000],
     },
     'NN' : {
-        'hidden_layer_sizes': [(100,), (300,), (500,), (50,50), (100, 100), (300, 300), (500,500)],
+        'hidden_layer_sizes': [(100,), (300,), (500,)],
         'activation': ['relu', 'tanh'],
-        'solver': ['adam', 'lbfgs'],
-        'alpha': [0.01, 0.1, 1, 10, 100],
+        'solver': ['adam'],
+        'alpha': [0.01, 0.1, 1, 10],
         'max_iter': [10000],
     },
     'BASE' : {
