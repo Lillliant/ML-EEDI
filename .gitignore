@@ -33,3 +33,7 @@ data/eedi/metadata/subject_metadata.csv
 data/eedi-full/data.pkl
 data/eedi-full/processed_eedi.csv
 data/eedi/data.pkl
+data/eedi-toy/metadata/answer_metadata.csv
+data/eedi-toy/metadata/question_metadata.csv
+data/eedi-toy/metadata/student_metadata.csv
+data/eedi-toy/metadata/subject_metadata.csv
