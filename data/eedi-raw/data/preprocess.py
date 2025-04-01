@@ -50,11 +50,11 @@ def reduce_data():
     for s in subjects:
         df[s] = df['SubjectId'].apply(lambda x: 1 if s in list(map(int, x.strip('[]').split(', '))) else 0)
 
-    pd.to_pickle(df, './train.pkl')
+    pd.to_pickle(df, './data.pkl')
 
 if __name__ == '__main__':
     reduce_data()
-    df = pd.read_pickle('./train.pkl')
-    df.drop(columns=['SubjectId', 'UserId', 'QuestionId', 'AnswerId'], inplace=True)
-    pd.to_pickle(df, './train_v3.pkl')
+    df = pd.read_pickle('./data.pkl')
+    df.drop(columns=['SubjectId'], inplace=True)
+    pd.to_pickle(df, './data.pkl')
     df.to_csv('./processed_eedi.csv', index=False)
