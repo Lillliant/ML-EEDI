@@ -55,6 +55,6 @@ def reduce_data():
 if __name__ == '__main__':
     reduce_data()
     df = pd.read_pickle('./data.pkl')
-    df.drop(columns=['SubjectId'], inplace=True)
+    df.drop(columns=['SubjectId', 'AnswerId'], inplace=True)
     pd.to_pickle(df, './data.pkl')
     df.to_csv('./processed_eedi.csv', index=False)
