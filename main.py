@@ -1,4 +1,4 @@
-import os, pprint, joblib
+import os, pprint, joblib, umap, pickle
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
@@ -7,13 +7,12 @@ from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.dummy import DummyClassifier
-import umap
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.feature_selection import SelectFromModel
 from param import param_grid
 
-def load(data_path: str, output_dir: str = './output/', pca: bool = False, um: bool = False, n_components: int = 100):
+def load(data_path: str, output_dir: str = './output/', pca: bool = False, um: bool = False, fs: bool = False, n_components: int = 100):
     # Most of the data is already preprocessed by preprocess.py in eedi-raw
     # Hence this is mostly to further reduce the data size
     if os.path.exists(f'{output_dir}/data.pkl'):
@@ -27,9 +26,11 @@ def load(data_path: str, output_dir: str = './output/', pca: bool = False, um: b
         print("Shape of data after stratified sampling:", data.shape)
         pd.to_pickle(data, f'{output_dir}/data.pkl')
 
-    X = data.drop(['IsCorrect'], axis=1)
+    X = data.drop(['IsCorrect', 'AnswerId'], axis=1) # remove the AnswerId column and the target
     y = data['IsCorrect']
-    # If PCA is used, then transform the data
+    print("Shape of data:", X.shape)
+
+    # Data transformation and feature selection
     if pca:
         from sklearn.decomposition import PCA
         print("PCA is used. Transforming the data...")
@@ -39,23 +40,37 @@ def load(data_path: str, output_dir: str = './output/', pca: bool = False, um: b
         reducer = umap.UMAP(n_components=n_components)
         print("UMAP is used. Transforming the data...")
         X = reducer.fit_transform(X)
-    return X, y
-
-# Perform GridSearch CV on a particular model
-def main(algorithm: str, pca: bool, um: bool, fs: bool, n_components: int):
-    param = param_grid[algorithm] # Hyperparameters
-    
-    # Load the data
-    X, y = load(data_path, output_path, pca=pca, um=um, n_components=n_components)
-    print("Shape of data:", X.shape)
-
     if fs:
         scaler = MinMaxScaler()
         print("Feature selection is used. Transforming the data...")
         X = scaler.fit_transform(X)
-        # Feature selection
+    
+    # Get train and test data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=0, shuffle=True)
+    print("Shape of training data:", X_train.shape)
+    print("Shape of testing data:", X_test.shape)
+    return X_train, X_test, y_train, y_test
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=0)
+def train(output_path, X_train, y_train, algorithm, model):
+    if os.path.exists(f'{output_path}/gd_{algorithm}.pkl'):
+        print("GridSearchCV already exists. Loading model...")
+        grid_search = joblib.load(f'{output_path}/gd_{algorithm}.pkl')
+        return grid_search
+    
+    print("GridSearchCV does not exist. Training model...")
+    param = param_grid[algorithm] # Hyperparameters
+    # Find the best hyperparameter with GridSearchCV
+    # By default for classification, stratified CV is used
+    scoring = ['accuracy'] # For now, use accuracy only ['accuracy', 'f1', 'precision', 'recall', 'roc_auc']
+    grid_search = GridSearchCV(model, param, cv=StratifiedKFold(n_splits=3), scoring=scoring, refit='accuracy', n_jobs=-1, verbose=4)
+    grid_search.fit(X_train, y_train)
+    joblib.dump(grid_search, f'{output_path}/gd_{algorithm}.pkl')
+    return grid_search
+
+# Perform GridSearch CV on a particular model
+def main(output_path:str, algorithm: str, pca: bool, um: bool, fs: bool, n_components: int):
+    # Load the data
+    X_train, X_test, y_train, y_test = load(data_path, output_path, pca=pca, um=um, fs=fs, n_components=n_components)
 
     # Initialize the model
     match algorithm:
@@ -71,7 +86,7 @@ def main(algorithm: str, pca: bool, um: bool, fs: bool, n_components: int):
             model = DummyClassifier(random_state=0)
         case _:
             raise ValueError(f"Unknown algorithm: {algorithm}")
-        
+
     # Additional code when feature selection is used
     if fs and algorithm != 'BASE':
         # Feature selection using Random Forest
@@ -82,23 +97,46 @@ def main(algorithm: str, pca: bool, um: bool, fs: bool, n_components: int):
         X_test = selector.transform(X_test)
         print("Shape of training data after feature selection:", X_train.shape)
 
-    # Find the best hyperparameter with GridSearchCV
-    # By default for classification, stratified CV is used
-    scoring = ['accuracy', 'f1', 'precision', 'recall', 'roc_auc'] # And then plot ROC and AUC curve
-    grid_search = GridSearchCV(model, param, cv=StratifiedKFold(n_splits=3), scoring=scoring, refit='accuracy', n_jobs=-1, verbose=4)
-    grid_search.fit(X_train, y_train)
-    print("Best hyperparameters:")
-    pprint.pprint(grid_search.best_params_)
-    print("Best score:")
-    pprint.pprint(grid_search.best_score_)
-    joblib.dump(grid_search, f'{output_path}/gd_{algorithm}.pkl')
+    gs = train(output_path, X_train, y_train, algorithm, model)
+    # Evaluate the model
+    print("Evaluating the model...")
+    evaluate(output_path, algorithm, gs, X_train, y_train, X_test, y_test)
 
+# For the sake of comparison, as IRT and NCDM has only parameter for AUC and Accuracy
+# These scores will be used to evaluate the model
+def evaluate(output_path, algorithm, gs, X_train, y_train, X_test, y_test):
+    from sklearn.metrics import accuracy_score
+    from sklearn.metrics import roc_auc_score
+    if not os.path.exists(f'{output_path}/eval'): os.makedirs(f'{output_path}/eval')
 
+    print("Retrieving the best model...")
+    model = gs.best_estimator_ # Load the best model according to the given metric in GridSearchCV
+    # Show the result of the parameter tuning
+    results = pd.DataFrame(gs.cv_results_)
+    results.to_csv(f'{output_path}/eval/{algorithm}-tuning.csv', index=False)
+
+    # Retrieve the best hyperparameters
+    with open(f'{output_path}/eval/{algorithm}-best-param.txt', 'w') as f:
+        f.write(f"Best hyperparameters for {algorithm}:\n")
+        f.write(f"{pprint.pformat(gs.best_params_)}\n")
+        f.write(f"Best score for {algorithm} on validation data:\n")
+        f.write(f"{gs.best_score_}\n")
+        f.close()
+    
+    print("Evaluating the model...")
+    train_accuracy = accuracy_score(y_train, model.predict(X_train))
+    test_accuracy = accuracy_score(y_test, model.predict(X_test))
+    auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+    with open(f'{output_path}/eval/{algorithm}-accuracy.txt', 'w') as f:
+        f.write(f"Train accuracy: {train_accuracy}\n")
+        f.write(f"Test accuracy: {test_accuracy}\n")
+        f.write(f"AUC: {auc}\n")
+    
 if __name__ == '__main__':
-    pca = False # PCA is used
-    um = True # Feature hashing is used
-    fs = True # Feature selection is used
-    n_components = 150 # Number of components to keep
+    pca = True # PCA is used
+    um = False # Feature hashing is used
+    fs = False # Feature selection is used
+    n_components = 100 # Number of components to keep
 
     output_path = f'./output/eedi{'-pca-' if pca else ''}{'-um-' if um else ''}{f'{n_components}' if pca or um else ''}{'-fs' if fs else ''}' # output_path = './output/eedi' './output/toy
     if not os.path.exists(output_path):
@@ -106,6 +144,7 @@ if __name__ == '__main__':
     data_path = './data/eedi/processed_eedi.csv' # data_path = './data/eedi/processed_eedi.csv' './data/eedi-toy/toy.csv'
 
     # Algorithms
-    algorithm = ['RFS'] # 'RFS', 'GBDT', 'LR', 'NN', 'BASE' <- Stratified baseline model
+    algorithm = ['RFS', 'GBDT'] # 'RFS', 'GBDT', 'LR', 'NN', 'BASE' <- Stratified baseline model
     for a in algorithm:
-        main(a, pca, um, fs, n_components)
+        print(f"Training {a} model...")
+        main(output_path, a, pca, um, fs, n_components)
