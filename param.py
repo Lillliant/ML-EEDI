@@ -1,6 +1,6 @@
 param_grid = {
     'RFS' : {
-        'n_estimators': [300, 500, 1000],
+        'n_estimators': [300, 500],
         'max_features': ['sqrt', 28, 100],
         'max_depth': [None, 5, 10, 20],
     },
