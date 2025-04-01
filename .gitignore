@@ -38,3 +38,4 @@ data/eedi-toy/metadata/question_metadata.csv
 data/eedi-toy/metadata/student_metadata.csv
 data/eedi-toy/metadata/subject_metadata.csv
 /output
+/data/eedi-no-one-hot
