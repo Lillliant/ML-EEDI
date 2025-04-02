@@ -31,3 +31,4 @@ if __name__ == "__main__":
     if os.path.exists(data_path):
         data = pd.read_pickle(data_path)
         plot_feature_histograms(data)
+    print(data['IsCorrect'].value_counts())
