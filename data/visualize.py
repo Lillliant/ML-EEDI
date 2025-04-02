@@ -6,7 +6,7 @@ import os
 
 # Create a histogram of the features with the data
 def plot_feature_histograms(data):
-    data = data.drop_duplicates()
+    data = data.drop_duplicates(['UserId', 'QuestionId'])
     features = ['UserId', 'QuestionId', 'Confidence']
     print(features)
     correct = data[data['IsCorrect'] == 1]
@@ -20,6 +20,7 @@ def plot_feature_histograms(data):
         plt.title(f"Distribution for {key}")
         plt.legend(loc="best")
         plt.savefig(f'./{key}.png')
+        plt.clf()
 
 # Create a scatter plot of the features with the data
 def plot_feature_scatter(data):
