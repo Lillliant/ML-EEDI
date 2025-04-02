@@ -20,9 +20,9 @@ valid_data.reset_index(drop=True, inplace=True)
 test_data.reset_index(drop=True, inplace=True)
 
 # Transformation parameters
-batch_size = 256
-user_n = np.max(train_data['UserId'])
-item_n = np.max([np.max(train_data['QuestionId']), np.max(valid_data['QuestionId']), np.max(test_data['QuestionId'])])
+batch_size = 32
+user_n = np.max([np.max(train_data['UserId']), np.max(valid_data['UserId']), np.max(test_data['UserId'])])*batch_size
+item_n = np.max([np.max(train_data['QuestionId']), np.max(valid_data['QuestionId']), np.max(test_data['QuestionId'])])*batch_size
 
 def transform(x, y, z, batch_size, **params):
     dataset = TensorDataset(
@@ -34,13 +34,13 @@ def transform(x, y, z, batch_size, **params):
 
 # Transform the data into the format required by EduCDM
 train_set, valid_set, test_set = [
-    transform(data["user_id"], data["item_id"], data["score"], batch_size)
+    transform(data["UserId"], data["QuestionId"], data["IsCorrect"], batch_size)
     for data in [train_data, valid_data, test_data]
 ]
 
 # The only hyperparameter in the NCDM model is learning rate
 # which is set to 0.001 by default
-lr = 0.001 # 0.001, 0.01, 0.1
+lr = 0.0002 # 0.0002 0.002, 0.02
 t = True # Train the model
 e = True # Evaluate the model
 
@@ -59,7 +59,7 @@ if e:
     print("train accuracy:", accuracy_train)
     print(f"auc: {auc}, accuracy: {accuracy_test}")
     with open(f"{output_dir}/irt_{lr}.txt", "w") as f:
-        f.write(f"auc: {auc}, accuracy: {accuracy_test}")
+        f.write(f"auc: {auc}, accuracy: {accuracy_test}\n")
         f.write(f"train accuracy: {accuracy_train}")
         f.close()
     print("Evaluation complete.")
