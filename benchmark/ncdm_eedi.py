@@ -54,7 +54,7 @@ train_set, valid_set, test_set = [
 
 # The only hyperparameter in the NCDM model is learning rate
 # which is set to 0.002 by default
-lr = 0.002 # 0.002, 0.02, 0.2
+lr = 0.0002 # 0.0002 0.002, 0.02
 t = True # Train the model
 e = True # Evaluate the model
 
@@ -74,7 +74,7 @@ if e:
     print("train accuracy:", accuracy_train)
     print(f"auc: {auc}, accuracy: {accuracy_test}")
     with open(f"{output_dir}/ncdm_{lr}.txt", "w") as f:
-        f.write(f"auc: {auc}, accuracy: {accuracy_test}")
+        f.write(f"auc: {auc}, accuracy: {accuracy_test}\n")
         f.write(f"train accuracy: {accuracy_train}")
         f.close()
     print("Evaluation complete.")
