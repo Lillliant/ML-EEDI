@@ -42,3 +42,4 @@ data/eedi-toy/metadata/subject_metadata.csv
 benchmark/main.py
 /benchmark/reference code
 *.snapshot
+benchmark/output/data.pkl
