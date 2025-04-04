@@ -1,0 +1,4 @@
+Best hyperparameters for RFS:
+{'max_depth': 5, 'max_features': 'sqrt', 'n_estimators': 300}
+Best score for RFS on validation data:
+0.6659756771697071

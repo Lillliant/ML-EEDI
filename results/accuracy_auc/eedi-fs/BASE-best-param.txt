@@ -1,0 +1,4 @@
+Best hyperparameters for BASE:
+{'strategy': 'stratified'}
+Best score for BASE on validation data:
+0.558098396904367
