@@ -40,7 +40,7 @@ train_set, valid_set, test_set = [
 
 # The only hyperparameter in the NCDM model is learning rate
 # which is set to 0.001 by default
-lr = 0.0002 # 0.0002 0.002, 0.02
+lr = 0.02 # 0.0002 0.002, 0.02
 t = True # Train the model
 e = True # Evaluate the model
 
@@ -50,7 +50,7 @@ if not os.path.exists(output_dir): os.makedirs(output_dir)
 print("Initializing IRT model...")
 cdm = GDIRT(user_n, item_n)
 if t:
-    cdm.train(train_set, valid_set, epoch=2, lr=lr)
+    cdm.train(train_set, valid_set, epoch=3, lr=lr)
     cdm.save(f"{output_dir}/irt_{lr}.snapshot")
 if e:
     cdm.load(f"{output_dir}/irt_{lr}.snapshot")
