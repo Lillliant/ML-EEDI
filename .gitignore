@@ -41,3 +41,4 @@ data/eedi-toy/metadata/subject_metadata.csv
 /data/eedi-no-one-hot
 benchmark/main.py
 /benchmark/reference code
+*.snapshot
