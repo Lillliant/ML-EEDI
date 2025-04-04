@@ -26,7 +26,8 @@ def load(data_path: str, output_dir: str = './output/', pca: bool = False, um: b
         print("Shape of data after stratified sampling:", data.shape)
         pd.to_pickle(data, f'{output_dir}/data.pkl')
 
-    X = data.drop(['IsCorrect', 'AnswerId'], axis=1) # remove the AnswerId column and the target
+    X = data.drop(['IsCorrect'], axis=1) # remove the AnswerId column and the target
+    if 'AnswerId' in X.columns: X = X.drop(['AnswerId'], axis=1) 
     y = data['IsCorrect']
     print("Shape of data:", X.shape)
 
@@ -137,14 +138,14 @@ if __name__ == '__main__':
     um = False # Feature hashing is used
     fs = False # Feature selection is used
     n_components = 100 # Number of components to keep
-
-    output_path = f'./output/eedi{'-pca-' if pca else ''}{'-um-' if um else ''}{f'{n_components}' if pca or um else ''}{'-fs' if fs else ''}' # output_path = './output/eedi' './output/toy
+    dataset = 'eedi' # Dataset to use
+    output_path = f'./output/{dataset}{'-pca-' if pca else ''}{'-um-' if um else ''}{f'{n_components}' if pca or um else ''}{'-fs' if fs else ''}' # output_path = './output/eedi' './output/toy
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    data_path = './data/eedi/processed_eedi.csv' # data_path = './data/eedi/processed_eedi.csv' './data/eedi-toy/toy.csv'
+    data_path = f'./data/{dataset}/processed_eedi.csv' # data_path = './data/eedi/processed_eedi.csv' './data/eedi-toy/toy.csv'
 
     # Algorithms
-    algorithm = ['RFS', 'GBDT'] # 'RFS', 'GBDT', 'LR', 'NN', 'BASE' <- Stratified baseline model
+    algorithm = ['BASE', 'GBDT', 'RFS'] # 'RFS', 'GBDT', 'LR', 'NN', 'BASE' <- Stratified baseline model
     for a in algorithm:
         print(f"Training {a} model...")
         main(output_path, a, pca, um, fs, n_components)
