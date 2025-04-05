@@ -91,8 +91,10 @@ if not os.path.exists(output_dir): os.makedirs(output_dir)
 print("Initializing IRT model...")
 cdm = GDIRT(user_n, item_n)
 if t:
+    print("Training the IRT model...")
     epoch, lr = train(train_data, output_dir=output_dir, epoch=10, n_lr=n_lr) # Train the model
 if e and lr is not None:
+    print("Evaluating the IRT model...")
     cdm.load(f"{output_dir}/irt_{lr}.snapshot")
     auc, accuracy_test = cdm.eval(test_set)
     print(f"auc: {auc}, accuracy: {accuracy_test}")
