@@ -92,7 +92,7 @@ print("Initializing IRT model...")
 cdm = GDIRT(user_n, item_n)
 if t:
     print("Training the IRT model...")
-    epoch, lr = train(train_data, output_dir=output_dir, epoch=5, n_lr=n_lr) # Train the model
+    epoch, lr = train(train_data, output_dir=output_dir, epoch=3, n_lr=n_lr) # Train the model
 if e and lr is not None:
     print("Evaluating the IRT model...")
     cdm.load(f"{output_dir}/irt_{lr}.snapshot")
