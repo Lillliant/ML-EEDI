@@ -43,3 +43,5 @@ benchmark/main.py
 /benchmark/reference code
 *.snapshot
 benchmark/output/data.pkl
+/data/eedi-one-hot/metadata
+/data/eedi-one-hot

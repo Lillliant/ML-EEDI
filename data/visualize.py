@@ -5,26 +5,22 @@ import numpy as np
 import os
 
 # Create a histogram of the features with the data
-def plot_feature_histograms(data):
-    data = data.drop_duplicates(['UserId', 'QuestionId'])
+def plot_feature_histograms(data: pd.DataFrame, output_dir: str):
+    if not os.path.exists(output_dir): os.makedirs(output_dir)
+    data = data.dropna()
     features = ['UserId', 'QuestionId', 'Confidence']
-    print(features)
     correct = data[data['IsCorrect'] == 1]
     incorrect = data[data['IsCorrect'] == 0]
     for key in features:
         _, bins = np.histogram(data[key], bins=25)
         plt.hist(correct[key], bins=bins, alpha=0.5, label="correct")
         plt.hist(incorrect[key], bins=bins, alpha=0.5, label="incorrect")
-        plt.xlabel("Feature magnitude")
+        plt.xlabel(key)
         plt.ylabel("Frequency")
         plt.title(f"Distribution for {key}")
         plt.legend(loc="best")
-        plt.savefig(f'./{key}.png')
+        plt.savefig(f'{output_dir}/{key}.png')
         plt.clf() # clear the figure
-
-# Create a scatter plot of the features with the data
-def plot_feature_scatter(data):
-    pass
 
 def plot_value_count_bar(data_1: pd.DataFrame, data_2: pd.DataFrame, output_dir: str):
     if not os.path.exists(output_dir): os.makedirs(output_dir)
@@ -50,6 +46,6 @@ if __name__ == "__main__":
     if os.path.exists(data_path_1) and os.path.exists(data_path_2):
         data_1 = pd.read_pickle(data_path_1)
         data_2 = pd.read_pickle(data_path_2)
-        #plot_feature_histograms(data)
-        plot_value_count_bar(data_1, data_2, output_dir)
-    #print(data_1['IsCorrect'].value_counts())
+        plot_feature_histograms(data_1, f'{output_dir}/eedi-full')
+        plot_feature_histograms(data_2, f'{output_dir}/eedi')
+        #plot_value_count_bar(data_1, data_2, output_dir)
