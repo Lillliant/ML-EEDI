@@ -9,10 +9,10 @@ import numpy as np
 import os
 
 # Create the train, validation, and test sets (EduCDM requires the target variable to be with X)
-data = pd.read_csv('../data/eedi-no-one-hot/processed_eedi.csv')
+data = pd.read_csv('../data/eedi/processed_eedi.csv')
 data = data.groupby('IsCorrect', group_keys=False)[list(data.keys())].apply(lambda x: x.sample(frac=0.2, random_state=0))
 train_data, test_data = train_test_split(data, stratify=data['IsCorrect'], random_state=0)
-df_item = pd.read_csv('../data/eedi-no-one-hot/metadata/question_metadata.csv')
+df_item = pd.read_csv('../data/eedi/metadata/question_metadata.csv')
 # VERY IMPORTANT - keeps the code from bugging out as embeddings depend on it
 train_data.reset_index(drop=True, inplace=True)
 test_data.reset_index(drop=True, inplace=True)

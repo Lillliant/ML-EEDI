@@ -1,0 +1,4 @@
+Best parameters: (3, 0.002)
+Best validation accuracy: 0.688970844320613
+Train accuracy: 0.8739358761746822
+test auc: 0.7139082822948903, test accuracy: 0.668684188707404

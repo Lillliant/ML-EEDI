@@ -9,10 +9,10 @@ import numpy as np
 import os
 
 # Create the train, validation, and test sets (EduCDM requires the target variable to be with X)
-data = pd.read_csv('../data/eedi-no-one-hot/processed_eedi.csv')
+data = pd.read_csv('../data/eedi/processed_eedi.csv')
 data = data.groupby('IsCorrect', group_keys=False)[list(data.keys())].apply(lambda x: x.sample(frac=0.2, random_state=0))
 train_data, test_data = train_test_split(data, stratify=data['IsCorrect'], random_state=0)
-df_item = pd.read_csv('../data/eedi-no-one-hot/metadata/question_metadata.csv')
+df_item = pd.read_csv('../data/eedi/metadata/question_metadata.csv')
 item2knowledge = {}
 knowledge_set = set()
 # VERY IMPORTANT - keeps the code from bugging out as embeddings depend on it
@@ -101,13 +101,13 @@ t = True # Train the model
 e = True # Evaluate the model
 
 # Main code
-output_dir = f"./output/{lr}"
+output_dir = f"./output/"
 if not os.path.exists(output_dir): os.makedirs(output_dir)
 print("Initializing NCDM model...")
 cdm = NCDM(knowledge_n, item_n, user_n)
 if t:
     print("Training NCDM model...")
-    epoch, lr = train(train_data, output_dir=output_dir, epoch=10, n_lr=n_lr) # Train the model
+    epoch, lr = train(train_data, output_dir=output_dir, epoch=3, n_lr=n_lr) # Train the model
 if e:
     print("Evaluating the NCDM model...")
     cdm.load(f"{output_dir}/ncdm_{lr}.snapshot")
