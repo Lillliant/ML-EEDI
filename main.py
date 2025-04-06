@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.feature_selection import SelectFromModel
 from param import param_grid
+from matplotlib import pyplot as plt
 
 def load(data_path: str, output_dir: str = './output/', pca: bool = False, um: bool = False, fs: bool = False, n_components: int = 100):
     # Most of the data is already preprocessed by preprocess.py in eedi-raw
@@ -58,7 +59,7 @@ def train(output_path, X_train, y_train, algorithm, model):
         grid_search = joblib.load(f'{output_path}/gd_{algorithm}.pkl')
         return grid_search
     
-    print("GridSearchCV does not exist. Training model...")
+    print(f"GridSearchCV does not exist at {output_path}/gd_{algorithm}.pkl. Training model...")
     param = param_grid[algorithm] # Hyperparameters
     # Find the best hyperparameter with GridSearchCV
     # By default for classification, stratified CV is used
@@ -103,6 +104,20 @@ def main(output_path:str, algorithm: str, pca: bool, um: bool, fs: bool, n_compo
     print("Evaluating the model...")
     evaluate(output_path, algorithm, gs, X_train, y_train, X_test, y_test)
 
+# Plot the feature importances
+def plot_feature_importances(model, algorithm: str, data: pd.DataFrame, output_dir: str): 
+    features = list(data.keys())
+    plt.figure(layout='constrained')
+    # for sake of visualization, only show the top 20 features
+    feature_importance = pd.Series(model.feature_importances_, index=features).nlargest(20) 
+    feature_importance.sort_values(ascending=False, inplace=True)
+    feature_importance.plot(kind='barh')
+    plt.title(f"Feature importance for {algorithm}")
+    plt.xlabel("Feature importance")
+    plt.ylabel("Feature")
+    plt.savefig(f'{output_dir}/{algorithm}_feature_importance.png')
+    plt.clf() # clear the figure
+
 # For the sake of comparison, as IRT and NCDM has only parameter for AUC and Accuracy
 # These scores will be used to evaluate the model
 def evaluate(output_path, algorithm, gs, X_train, y_train, X_test, y_test):
@@ -133,12 +148,14 @@ def evaluate(output_path, algorithm, gs, X_train, y_train, X_test, y_test):
         f.write(f"Test accuracy: {test_accuracy}\n")
         f.write(f"AUC: {auc}\n")
     
+    #plot_feature_importances(model, algorithm, X_train, f'{output_path}/eval') # plot the feature importances
+    
 if __name__ == '__main__':
-    pca = True # PCA is used
+    pca = False # PCA is used
     um = False # Feature hashing is used
     fs = False # Feature selection is used
     n_components = 100 # Number of components to keep
-    dataset = 'eedi' # Dataset to use
+    dataset = 'eedi-one-hot' # Dataset to use
     output_path = f'./output/{dataset}{'-pca-' if pca else ''}{'-um-' if um else ''}{f'{n_components}' if pca or um else ''}{'-fs' if fs else ''}' # output_path = './output/eedi' './output/toy
     if not os.path.exists(output_path):
         os.makedirs(output_path)
